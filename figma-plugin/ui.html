@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>System Color Engine</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f9fafb;
+      color: #1e293b;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+    }
+
+    /* 侧边栏样式 */
+    .sidebar {
+      width: 320px;
+      flex-shrink: 0;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .sidebar-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-header .icon {
+      width: 24px;
+      height: 24px;
+      background: #2563eb;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .sidebar-header p {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .config-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .config-section label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    select {
+      width: 100%;
+      appearance: none;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      padding: 10px 32px 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .select-arrow {
+      pointer-events: none;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+    }
+
+    .description {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .color-input-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .color-picker-wrapper {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 150%;
+      height: 150%;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      border: none;
+    }
+
+    .color-text-input {
+      flex: 1;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .color-text-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .random-btn {
+      font-size: 12px;
+      color: #2563eb;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .random-btn:hover {
+      color: #1d4ed8;
+      background: #eff6ff;
+    }
+
+    .random-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .text-input {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .sidebar-footer {
+      padding: 24px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .export-btn {
+      width: 100%;
+      padding: 12px 16px;
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .export-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .export-btn:active {
+      background: #1e40af;
+    }
+
+    .export-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .footer-links {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      font-size: 12px;
+    }
+
+    .footer-links a {
+      color: #94a3b8;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: #64748b;
+    }
+
+    /* 主内容区样式 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #f9fafb;
+    }
+
+    .main-header {
+      height: 64px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .header-left h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .divider {
+      width: 1px;
+      height: 16px;
+      background: #e2e8f0;
+    }
+
+    .stats {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+    }
+
+    .stat-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      font-size: 13px;
+    }
+
+    .stat-badge.pass {
+      color: #166534;
+      background: #f0fdf4;
+    }
+
+    .stat-badge.fail {
+      color: #991b1b;
+      background: #fef2f2;
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .stat-dot.pass {
+      background: #22c55e;
+    }
+
+    .stat-dot.fail {
+      background: #ef4444;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .toggle-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toggle-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #475569;
+      user-select: none;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      background: #e2e8f0;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-switch.active {
+      background: #2563eb;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(16px);
+    }
+
+    .wcag-label {
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wcag-label svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .palette-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    .palette-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .palette-placeholder {
+      text-align: center;
+      padding: 80px 20px;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .palette-placeholder p {
+      margin-bottom: 8px;
+    }
+
+    /* 调色板卡片样式 */
+    .palette-card {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .palette-card:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .palette-card-swatch {
+      position: relative;
+      height: 128px;
+      width: 100%;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .palette-card-swatch input[type="color"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      border: none;
+      z-index: 10;
+    }
+
+    .palette-card-swatch input[type="color"]:disabled {
+      cursor: not-allowed;
+    }
+
+    .palette-card-swatch .lock-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      border: none;
+      cursor: pointer;
+      z-index: 20;
+      transition: all 0.2s;
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .palette-card-swatch:hover .lock-btn {
+      opacity: 1;
+    }
+
+    .palette-card-swatch .lock-btn.locked {
+      opacity: 1;
+      color: #2563eb;
+    }
+
+    .palette-card-swatch .lock-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .palette-card-swatch .edit-indicator {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .palette-card-swatch:hover .edit-indicator {
+      opacity: 1;
+    }
+
+    .palette-card-swatch .edit-indicator div {
+      background: rgba(0, 0, 0, 0.2);
+      color: white;
+      padding: 8px;
+      border-radius: 50%;
+      backdrop-filter: blur(4px);
+    }
+
+    .palette-card-swatch .edit-indicator svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .palette-card-details {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .palette-card-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+
+    .palette-card-hex {
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 14px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .palette-card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: auto;
+    }
+
+    .palette-card-badge.aaa {
+      background: #dcfce7;
+      color: #166534;
+      border-color: #86efac;
+    }
+
+    .palette-card-badge.aa {
+      background: #f0fdf4;
+      color: #15803d;
+      border-color: #bbf7d0;
+    }
+
+    .palette-card-badge.aap {
+      background: #f0fdf4;
+      color: #15803d;
+      border-color: #bbf7d0;
+    }
+
+    .palette-card-badge.fail {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .palette-card-badge span {
+      opacity: 0.6;
+    }
+
+    .message {
+      padding: 8px 12px;
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-radius: 6px;
+      font-size: 12px;
+      display: none;
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    /* 导出模态框样式 */
+    .export-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .export-modal.show {
+      display: flex;
+    }
+
+    .export-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    .export-modal-container {
+      position: relative;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      width: 900px;
+      height: 600px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .export-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 64px;
+      border-bottom: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+
+    .export-modal-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .export-modal-close {
+      padding: 8px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #94a3b8;
+      border-radius: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .export-modal-close:hover {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .export-modal-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .export-modal-sidebar {
+      width: 224px;
+      background: #f8fafc;
+      border-right: 1px solid #e2e8f0;
+      padding: 24px 12px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .export-sidebar-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+      text-align: left;
+    }
+
+    .export-sidebar-item:hover {
+      background: #e2e8f0;
+      color: #334155;
+    }
+
+    .export-sidebar-item.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+
+    .export-sidebar-badge {
+      font-size: 10px;
+      font-weight: 500;
+      background: #e2e8f0;
+      color: #64748b;
+      padding: 2px 6px;
+      border-radius: 9999px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .export-modal-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: #ffffff;
+    }
+
+    .export-color-format-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 16px 32px;
+      border-bottom: 1px solid #f1f5f9;
+      flex-shrink: 0;
+    }
+
+    .export-color-format-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s;
+      padding: 4px 0;
+    }
+
+    .export-color-format-btn:hover {
+      color: #64748b;
+    }
+
+    .export-color-format-btn.active {
+      color: #0f172a;
+    }
+
+    .export-color-format-badge {
+      font-size: 10px;
+      background: #f1f5f9;
+      color: #64748b;
+      padding: 2px 6px;
+      border-radius: 9999px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .export-code-container {
+      flex: 1;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .export-copy-btn {
+      position: absolute;
+      top: 24px;
+      right: 32px;
+      z-index: 10;
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      border-radius: 9999px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .export-copy-btn:hover {
+      background: #1e293b;
+    }
+
+    .export-code-preview {
+      flex: 1;
+      padding: 32px;
+      overflow: auto;
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1e293b;
+      background: #ffffff;
+    }
+
+    .export-code-preview code {
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <h1>
+        <div class="icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+          </svg>
+        </div>
+        System Color
+      </h1>
+      <p>Engineering-grade generator</p>
+    </div>
+
+    <!-- Content -->
+    <div class="sidebar-content">
+      <!-- Section 1: Color System -->
+      <div class="config-section">
+        <label id="colorSystemLabel">Color System</label>
+        <div class="select-wrapper">
+          <select id="colorSystemSelect">
+            <option value="tailwind">Tailwind CSS</option>
+            <option value="material">Material Design 3</option>
+            <option value="ant">Ant Design</option>
+            <option value="atlassian">Atlassian Design</option>
+          </select>
+          <div class="select-arrow">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+            </svg>
+          </div>
+        </div>
+        <p class="description" id="systemDescription">Expertly crafted spacing. 50-950 scale. Optimized for UI.</p>
+      </div>
+
+      <!-- Section 2: Base Color -->
+      <div class="config-section">
+        <div class="section-header">
+          <label id="baseColorLabel">Base Color</label>
+          <button class="random-btn" id="randomColorBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+              <path d="M16 16h5v5"/>
+            </svg>
+            <span id="randomBtnText">Random</span>
+          </button>
+        </div>
+        <div class="color-input-group">
+          <div class="color-picker-wrapper">
+            <input type="color" id="colorPicker" value="#3B82F6">
+          </div>
+          <input type="text" id="colorTextInput" class="color-text-input" value="#3B82F6" maxlength="7">
+        </div>
+        <p class="description" id="mappedToStepDesc">Mapped to step <b id="baseStep">500</b></p>
+      </div>
+
+      <!-- Section 3: Token Config -->
+      <div class="config-section">
+        <label id="tokenConfigLabel">Token Config</label>
+        <input type="text" id="tokenPrefixInput" class="text-input" value="primary" placeholder="e.g. primary">
+      </div>
+  </div>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <button class="export-btn" id="exportBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" x2="12" y1="15" y2="3"/>
+        </svg>
+        <span id="exportBtnText">Export</span>
+      </button>
+      <div class="footer-links">
+        <a href="#" id="docLink">Documentation</a>
+        <a href="#" id="issueLink">Report Issue</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+    <!-- Top Bar -->
+    <header class="main-header">
+      <div class="header-left">
+        <h2 id="palettePreviewTitle">Palette Preview</h2>
+        <div class="divider"></div>
+        <div class="stats">
+          <div class="stat-badge pass">
+            <span class="stat-dot pass"></span>
+            <b id="passCount">0</b> <span id="passText">Pass</span>
+          </div>
+          <div class="stat-badge fail" id="failBadge" style="display: none;">
+            <span class="stat-dot fail"></span>
+            <b id="failCount">0</b> <span id="failText">Fail</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="toggle-wrapper">
+          <label class="toggle-label" for="langToggle" id="langToggleLabel">EN</label>
+          <div class="toggle-switch" id="langToggle"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="toggle-wrapper">
+          <label class="toggle-label" for="autoFixToggle" id="autoFixLabel">Auto-fix Contrast</label>
+          <div class="toggle-switch" id="autoFixToggle"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="wcag-label">
+          <span id="wcagLabel">WCAG vs White</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Palette Container -->
+    <div class="palette-container">
+      <div class="palette-grid" id="paletteGrid">
+        <div class="palette-placeholder">
+          <p>调色板将在这里显示</p>
+          <p style="font-size: 12px; color: #cbd5e1;">选择颜色系统和基础颜色后生成</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Message Toast -->
+  <div id="message" class="message"></div>
+
+  <!-- 导出模态框 -->
+  <div id="exportModal" class="export-modal">
+    <div class="export-modal-backdrop" id="exportModalBackdrop"></div>
+    <div class="export-modal-container">
+      <!-- Header -->
+      <div class="export-modal-header">
+        <h3 id="exportModalTitle">Export code</h3>
+        <button class="export-modal-close" id="exportModalClose">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="export-modal-content">
+        <!-- Sidebar -->
+        <div class="export-modal-sidebar" id="exportSidebar"></div>
+
+        <!-- Main Area -->
+        <div class="export-modal-main">
+          <!-- Color Format Bar -->
+          <div class="export-color-format-bar" id="exportColorFormatBar" style="display: none;"></div>
+
+          <!-- Code Preview -->
+          <div class="export-code-container">
+            <div style="position: absolute; top: 24px; right: 32px; z-index: 10; display: flex; gap: 8px;">
+              <button class="export-copy-btn" id="exportCopyBtn" style="position: static;">
+                <span id="copyBtnText">Copy to clipboard</span>
+              </button>
+              <button class="export-copy-btn" id="createVariablesBtn" style="position: static; background: #2563eb;">
+                <span id="createVarBtnText">Create Variables</span>
+              </button>
+              <button class="export-copy-btn" id="createStylesBtn" style="position: static; background: #2563eb;">
+                <span id="createStyleBtnText">Create Styles</span>
+              </button>
+            </div>
+            <pre class="export-code-preview"><code id="exportCodePreview"></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载 d3 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+
+  <script>
+    // UI 线程代码 - 直接内联在 HTML 中
+    console.log('UI 脚本开始执行');
+
+    // ========== 语言包配置 ==========
+    const LANG_PACK = {
+      en: {
+        // 侧边栏
+        colorSystem: 'Color System',
+        baseColor: 'Base Color',
+        random: 'Random',
+        mappedToStep: 'Mapped to step',
+        tokenConfig: 'Token Config',
+        export: 'Export',
+        documentation: 'Documentation',
+        reportIssue: 'Report Issue',
+        // 主内容区
+        palettePreview: 'Palette Preview',
+        pass: 'Pass',
+        fail: 'Fail',
+        autoFix: 'Auto-fix Contrast',
+        wcagVsWhite: 'WCAG vs White',
+        // 占位符
+        paletteWillShow: 'Palette will be displayed here',
+        selectColorSystem: 'Generated after selecting color system and base color',
+        // 导出模态框
+        exportCode: 'Export code',
+        copyToClipboard: 'Copy to clipboard',
+        createVariables: 'Create Variables',
+        createStyles: 'Create Styles',
+        copied: 'Copied!',
+        // 消息提示
+        switchedTo: 'Switched to',
+        randomColorGenerated: 'Random color generated',
+        autoFixEnabled: 'Auto-fix contrast enabled',
+        autoFixDisabled: 'Auto-fix contrast disabled',
+        pleaseGeneratePalette: 'Please generate palette first',
+        noContentToCopy: 'No content to copy',
+        copiedToClipboard: 'Copied to clipboard!',
+        copyFailed: 'Copy failed, please copy manually',
+        success: 'Success!',
+        error: 'Error:',
+        unknownError: 'Unknown error',
+        variablesCreated: 'Created',
+        variablesText: 'variables',
+        stylesCreated: 'Created',
+        stylesText: 'color styles',
+        skipped: 'skipped',
+        allExist: 'All already exist',
+        switchedToLang: 'Switched to English',
+        // 颜色系统描述
+        tailwindDesc: 'Expertly crafted spacing. 50-950 scale. Optimized for UI.',
+        materialDesc: 'Tonal palettes key to MD3 dynamic color.',
+        antDesc: 'Natural algorithms with a 10-step scale.',
+        atlassianDesc: 'Specific scales for enterprise software density.',
+        // 语言切换标签
+        langLabel: 'EN'
+      },
+      zh: {
+        // 侧边栏
+        colorSystem: '颜色系统',
+        baseColor: '基础颜色',
+        random: '随机',
+        mappedToStep: '映射到步骤',
+        tokenConfig: 'Token 配置',
+        export: '导出',
+        documentation: '文档',
+        reportIssue: '报告问题',
+        // 主内容区
+        palettePreview: '调色板预览',
+        pass: '通过',
+        fail: '失败',
+        autoFix: '自动修复对比度',
+        wcagVsWhite: 'WCAG vs 白色',
+        // 占位符
+        paletteWillShow: '调色板将在这里显示',
+        selectColorSystem: '选择颜色系统和基础颜色后生成',
+        // 导出模态框
+        exportCode: '导出代码',
+        copyToClipboard: '复制到剪贴板',
+        createVariables: '创建变量',
+        createStyles: '创建样式',
+        copied: '已复制！',
+        // 消息提示
+        switchedTo: '已切换到',
+        randomColorGenerated: '已生成随机颜色',
+        autoFixEnabled: '已开启自动修复对比度',
+        autoFixDisabled: '已关闭自动修复对比度',
+        pleaseGeneratePalette: '请先生成调色板',
+        noContentToCopy: '没有可复制的内容',
+        copiedToClipboard: '已复制到剪贴板！',
+        copyFailed: '复制失败，请手动复制',
+        success: '操作成功！',
+        error: '错误：',
+        unknownError: '未知错误',
+        variablesCreated: '已创建',
+        variablesText: '个变量',
+        stylesCreated: '已创建',
+        stylesText: '个颜色样式',
+        skipped: '跳过',
+        allExist: '所有已存在',
+        switchedToLang: '已切换到中文',
+        // 颜色系统描述
+        tailwindDesc: '精心设计的间距。50-950 刻度。为 UI 优化。',
+        materialDesc: 'MD3 动态颜色的关键色调调色板。',
+        antDesc: '自然算法，10 步刻度。',
+        atlassianDesc: '企业软件密度的特定刻度。',
+        // 语言切换标签
+        langLabel: '中文'
+      }
+    };
+
+    // 当前使用的语言字符串对象（默认英文）
+    let T = LANG_PACK.en;
+    let currentLang = 'en';
+
+    // 更新所有静态标签文本
+    function updateStaticLabels() {
+      // 侧边栏
+      document.getElementById('colorSystemLabel').textContent = T.colorSystem;
+      document.getElementById('baseColorLabel').textContent = T.baseColor;
+      document.getElementById('randomBtnText').textContent = T.random;
+      document.getElementById('mappedToStepDesc').innerHTML = T.mappedToStep + ' <b id="baseStep">' + state.selectedMode.baseStep + '</b>';
+      document.getElementById('tokenConfigLabel').textContent = T.tokenConfig;
+      document.getElementById('exportBtnText').textContent = T.export;
+      document.getElementById('docLink').textContent = T.documentation;
+      document.getElementById('issueLink').textContent = T.reportIssue;
+
+      // 主内容区
+      document.getElementById('palettePreviewTitle').textContent = T.palettePreview;
+      document.getElementById('passText').textContent = T.pass;
+      document.getElementById('failText').textContent = T.fail;
+      document.getElementById('autoFixLabel').textContent = T.autoFix;
+      document.getElementById('wcagLabel').textContent = T.wcagVsWhite;
+      document.getElementById('langToggleLabel').textContent = T.langLabel;
+
+      // 导出模态框
+      document.getElementById('exportModalTitle').textContent = T.exportCode;
+      document.getElementById('copyBtnText').textContent = T.copyToClipboard;
+      document.getElementById('createVarBtnText').textContent = T.createVariables;
+      document.getElementById('createStyleBtnText').textContent = T.createStyles;
+
+      // 更新颜色系统描述
+      updateSystemDescription();
+
+      // 更新调色板占位符（如果还没有生成调色板）
+      if (state.palette.length === 0) {
+        const placeholder = document.querySelector('.palette-placeholder');
+        if (placeholder) {
+          placeholder.innerHTML = `
+            <p>${T.paletteWillShow}</p>
+            <p style="font-size: 12px; color: #cbd5e1;">${T.selectColorSystem}</p>
+          `;
+        }
+      }
+    }
+
+    // 更新颜色系统描述
+    function updateSystemDescription() {
+      const mode = state.selectedMode;
+      let desc = '';
+
+      switch(mode.id) {
+        case 'tailwind':
+          desc = T.tailwindDesc;
+          break;
+        case 'material':
+          desc = T.materialDesc;
+          break;
+        case 'ant':
+          desc = T.antDesc;
+          break;
+        case 'atlassian':
+          desc = T.atlassianDesc;
+          break;
+        default:
+          desc = mode.description;
+      }
+
+      const systemDescription = document.getElementById('systemDescription');
+      if (systemDescription) {
+        systemDescription.textContent = desc;
+      }
+    }
+
+    // 切换语言
+    function switchLanguage(lang) {
+      currentLang = lang;
+      T = LANG_PACK[lang];
+      updateStaticLabels();
+      renderPalette(); // 重新渲染调色板（如果已生成）
+    }
+
+    // 等待 d3 加载完成
+    function waitForD3(callback) {
+      if (typeof d3 !== 'undefined') {
+        callback();
+      } else {
+        setTimeout(() => waitForD3(callback), 50);
+      }
+    }
+
+    // 颜色系统配置
+    const COLOR_MODES = {
+      tailwind: {
+        id: 'tailwind',
+        name: 'Tailwind CSS',
+        description: 'Expertly crafted spacing. 50-950 scale. Optimized for UI.',
+        steps: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950],
+        baseStep: 500
+      },
+      material: {
+        id: 'material',
+        name: 'Material Design 3',
+        description: 'Tonal palettes key to MD3 dynamic color.',
+        steps: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100],
+        baseStep: 40
+      },
+      ant: {
+        id: 'ant',
+        name: 'Ant Design',
+        description: 'Natural algorithms with a 10-step scale.',
+        steps: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        baseStep: 6
+      },
+      atlassian: {
+        id: 'atlassian',
+        name: 'Atlassian Design',
+        description: 'Specific scales for enterprise software density.',
+        steps: [50, 75, 100, 200, 300, 400, 500, 600, 700, 800, 900],
+        baseStep: 400
+      }
+    };
+
+    // 状态管理
+    let state = {
+      selectedMode: COLOR_MODES.tailwind,
+      baseColor: '#3B82F6',
+      palette: [],
+      tokenConfig: { prefix: 'primary', casing: 'kebab' },
+      autoAdjust: false
+    };
+
+    // DOM 元素引用
+    const colorSystemSelect = document.getElementById('colorSystemSelect');
+    const systemDescription = document.getElementById('systemDescription');
+    const baseStep = document.getElementById('baseStep');
+    const colorPicker = document.getElementById('colorPicker');
+    const colorTextInput = document.getElementById('colorTextInput');
+    const tokenPrefixInput = document.getElementById('tokenPrefixInput');
+    const randomColorBtn = document.getElementById('randomColorBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const autoFixToggle = document.getElementById('autoFixToggle');
+    const paletteGrid = document.getElementById('paletteGrid');
+    const passCountEl = document.getElementById('passCount');
+    const failCountEl = document.getElementById('failCount');
+    const failBadge = document.getElementById('failBadge');
+    const messageDiv = document.getElementById('message');
+
+      // 显示消息
+      function showMessage(text) {
+        if (messageDiv) {
+          messageDiv.textContent = text;
+          messageDiv.classList.add('show');
+          setTimeout(function() {
+            messageDiv.classList.remove('show');
+          }, 2000);
+        }
+      }
+
+    // 颜色服务函数
+    function getLuminance(r, g, b) {
+      const a = [r, g, b].map((v) => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    }
+
+    function calculateWCAG(fgHex, bgHex = '#FFFFFF') {
+      const fg = d3.color(fgHex)?.rgb();
+      const bg = d3.color(bgHex)?.rgb();
+
+      if (!fg || !bg) {
+        return { ratio: 0, level: 'Fail', isPass: false };
+      }
+
+      const lum1 = getLuminance(fg.r, fg.g, fg.b);
+      const lum2 = getLuminance(bg.r, bg.g, bg.b);
+
+      const brightest = Math.max(lum1, lum2);
+      const darkest = Math.min(lum1, lum2);
+
+      const ratio = (brightest + 0.05) / (darkest + 0.05);
+      const roundedRatio = parseFloat(ratio.toFixed(2));
+
+      let level = 'Fail';
+      if (roundedRatio >= 7) level = 'AAA';
+      else if (roundedRatio >= 4.5) level = 'AA';
+      else if (roundedRatio >= 3) level = 'AA+';
+
+      return {
+        ratio: roundedRatio,
+        level: level,
+        isPass: roundedRatio >= 4.5
+      };
+    }
+
+    function generatePalette(baseColorHex, mode, autoAdjust = false) {
+      const baseColor = d3.color(baseColorHex);
+      if (!baseColor) return [];
+
+      const steps = mode.steps;
+      const baseStep = mode.baseStep;
+
+      // Using LCH for perceptual uniformity
+      const interpolator = d3.interpolateHcl;
+
+      const maxStep = steps[steps.length - 1];
+      const minStep = steps[0];
+
+      // Normalize baseStep to 0-1
+      const tBase = (baseStep - minStep) / (maxStep - minStep);
+
+      // Generate scales
+      // Light side: White to Base
+      const scaleLight = d3.scaleLinear()
+        .domain([0, 1])
+        .range(['#ffffff', baseColorHex])
+        .interpolate(interpolator);
+
+      // Dark side: Base to Black
+      const scaleDark = d3.scaleLinear()
+        .domain([0, 1])
+        .range([baseColorHex, '#000000'])
+        .interpolate(interpolator);
+
+      return steps.map((step) => {
+        // Normalize current step
+        const tCurrent = (step - minStep) / (maxStep - minStep);
+
+        let hex = '';
+
+        if (tCurrent < tBase) {
+          // It's lighter than base
+          const t = tCurrent / tBase;
+          const easedT = Math.pow(t, 0.9);
+          hex = scaleLight(easedT);
+        } else if (tCurrent > tBase) {
+          // It's darker than base
+          const t = (tCurrent - tBase) / (1 - tBase);
+          const easedT = Math.pow(t, 1.1);
+          hex = scaleDark(easedT);
+        } else {
+          hex = baseColorHex;
+        }
+
+        let finalHex = d3.color(hex)?.formatHex() || '#000000';
+        let contrast = calculateWCAG(finalHex, '#FFFFFF');
+
+        // Auto-adjust logic: If enabled and fails AA, try to fix
+        if (autoAdjust && !contrast.isPass) {
+          const color = d3.hcl(finalHex);
+          let l = color.l;
+
+          for (let i = 0; i < 100; i++) {
+            if (l <= 0) break;
+            l -= 1;
+            const tryHex = d3.hcl(color.h, color.c, l).formatHex();
+            const tryContrast = calculateWCAG(tryHex, '#FFFFFF');
+
+            if (tryContrast.isPass) {
+              finalHex = tryHex;
+              contrast = tryContrast;
+              break;
+            }
+          }
+        }
+
+        return {
+          step: step,
+          hex: finalHex,
+          isBase: step === baseStep,
+          locked: step === baseStep,
+          contrast: contrast
+        };
+      });
+    }
+
+    // 更新状态并生成调色板
+    function updateState(updates) {
+      state = { ...state, ...updates };
+
+      // 生成调色板
+      waitForD3(function() {
+        // 保存已锁定的颜色
+        const lockedColors = {};
+        state.palette.forEach(function(p) {
+          if (p.locked) {
+            lockedColors[p.step] = p.hex;
+          }
+        });
+
+        const newPalette = generatePalette(state.baseColor, state.selectedMode, state.autoAdjust);
+
+        // 恢复已锁定的颜色
+        newPalette.forEach(function(p) {
+          if (lockedColors[p.step]) {
+            p.hex = lockedColors[p.step];
+            p.locked = true;
+            p.contrast = calculateWCAG(lockedColors[p.step], '#FFFFFF');
+          }
+        });
+
+        state.palette = newPalette;
+
+        // 更新统计信息
+        updateStats();
+
+        // 渲染调色板
+        renderPalette();
+      });
+    }
+
+    // 更新统计信息
+    function updateStats() {
+      const passCount = state.palette.filter(p => p.contrast.level !== 'Fail').length;
+      const failCount = state.palette.filter(p => p.contrast.level === 'Fail').length;
+
+      if (passCountEl) passCountEl.textContent = passCount;
+      if (failCountEl) failCountEl.textContent = failCount;
+
+      if (failBadge) {
+        if (failCount > 0) {
+          failBadge.style.display = 'flex';
+        } else {
+          failBadge.style.display = 'none';
+        }
+      }
+    }
+
+    // 渲染调色板卡片
+    function renderPalette() {
+      if (!paletteGrid) return;
+
+      // 清空现有内容
+      paletteGrid.innerHTML = '';
+
+      if (state.palette.length === 0) {
+        paletteGrid.innerHTML = `
+          <div class="palette-placeholder">
+            <p>调色板将在这里显示</p>
+            <p style="font-size: 12px; color: #cbd5e1;">选择颜色系统和基础颜色后生成</p>
+          </div>
+        `;
+        return;
+      }
+
+      // 为每个调色板步骤创建卡片
+      state.palette.forEach(function(item) {
+        const badgeClass = item.contrast.level.toLowerCase().replace('+', 'p');
+        const badgeText = item.contrast.level === 'AA+' ? 'AA+' : item.contrast.level;
+
+        const card = document.createElement('div');
+        card.className = 'palette-card';
+        card.innerHTML = `
+          <div class="palette-card-swatch" style="background-color: ${item.hex}">
+            <input
+              type="color"
+              value="${item.hex}"
+              data-step="${item.step}"
+              ${item.locked ? 'disabled' : ''}
+              title="${item.locked ? 'Color is locked' : 'Click to edit color'}"
+            >
+            <button
+              class="lock-btn ${item.locked ? 'locked' : ''}"
+              data-step="${item.step}"
+              title="${item.locked ? 'Unlock color' : 'Lock color'}"
+            >
+              ${item.locked
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>'
+              }
+            </button>
+            ${!item.locked ? `
+              <div class="edit-indicator">
+                <div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+          <div class="palette-card-details">
+            <div>
+              <h3 class="palette-card-title">${state.tokenConfig.prefix}-${item.step}</h3>
+              <div class="palette-card-hex">${item.hex}</div>
+            </div>
+            <div class="palette-card-badge ${badgeClass}">
+              <span>WCAG ${item.contrast.ratio}</span>
+              <span>|</span>
+              <span>${badgeText}</span>
+            </div>
+          </div>
+        `;
+
+        // 添加颜色编辑事件
+        const colorInput = card.querySelector('input[type="color"]');
+        if (colorInput) {
+          colorInput.addEventListener('input', function(e) {
+            const step = parseInt(e.target.dataset.step);
+            const newHex = e.target.value.toUpperCase();
+            updateColor(step, newHex);
+          });
+        }
+
+        // 添加锁定切换事件
+        const lockBtn = card.querySelector('.lock-btn');
+        if (lockBtn) {
+          lockBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const step = parseInt(e.target.closest('.lock-btn').dataset.step);
+            toggleLock(step);
+          });
+        }
+
+        paletteGrid.appendChild(card);
+      });
+    }
+
+    // 更新单个颜色
+    function updateColor(step, newHex) {
+      waitForD3(function() {
+        const contrast = calculateWCAG(newHex, '#FFFFFF');
+        state.palette = state.palette.map(function(p) {
+          if (p.step === step && !p.locked) {
+            return { ...p, hex: newHex, contrast: contrast };
+          }
+          return p;
+        });
+        updateStats();
+        renderPalette();
+      });
+    }
+
+    // 切换锁定状态
+    function toggleLock(step) {
+      state.palette = state.palette.map(function(p) {
+        if (p.step === step) {
+          return { ...p, locked: !p.locked };
+        }
+        return p;
+      });
+      renderPalette();
+    }
+
+    // 颜色系统切换
+    if (colorSystemSelect) {
+      colorSystemSelect.addEventListener('change', function(e) {
+        const modeId = e.target.value;
+        const mode = COLOR_MODES[modeId];
+        if (mode) {
+          updateState({ selectedMode: mode });
+          updateSystemDescription();
+          if (baseStep) {
+            baseStep.textContent = mode.baseStep;
+          }
+          showMessage(`${T.switchedTo} ${mode.name}`);
+        }
+      });
+    }
+
+    // 颜色选择器同步
+    if (colorPicker && colorTextInput) {
+      colorPicker.addEventListener('input', function(e) {
+        const color = e.target.value.toUpperCase();
+        colorTextInput.value = color;
+        updateState({ baseColor: color });
+      });
+
+      colorTextInput.addEventListener('input', function(e) {
+        const value = e.target.value.toUpperCase();
+        if (value.length <= 7 && /^#[0-9A-F]*$/.test(value)) {
+          if (value.length === 7) {
+            colorPicker.value = value;
+            updateState({ baseColor: value });
+          }
+        }
+      });
+
+      colorTextInput.addEventListener('blur', function(e) {
+        const value = e.target.value.toUpperCase();
+        if (value.length === 7 && /^#[0-9A-F]{6}$/.test(value)) {
+          colorPicker.value = value;
+          updateState({ baseColor: value });
+        } else {
+          e.target.value = state.baseColor;
+        }
+      });
+    }
+
+    // Token prefix 更新
+    if (tokenPrefixInput) {
+      tokenPrefixInput.addEventListener('input', function(e) {
+        updateState({
+          tokenConfig: { ...state.tokenConfig, prefix: e.target.value }
+        });
+      });
+    }
+
+    // 随机颜色
+    if (randomColorBtn) {
+      randomColorBtn.addEventListener('click', function() {
+        const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0').toUpperCase();
+        if (colorPicker) colorPicker.value = randomColor;
+        if (colorTextInput) colorTextInput.value = randomColor;
+        updateState({ baseColor: randomColor });
+        showMessage(T.randomColorGenerated);
+      });
+    }
+
+    // 语言切换开关
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle) {
+      langToggle.addEventListener('click', function() {
+        const newLang = currentLang === 'en' ? 'zh' : 'en';
+        switchLanguage(newLang);
+        if (newLang === 'zh') {
+          langToggle.classList.add('active');
+        } else {
+          langToggle.classList.remove('active');
+        }
+        showMessage(T.switchedToLang);
+      });
+    }
+
+    // Auto-fix 开关
+    if (autoFixToggle) {
+      autoFixToggle.addEventListener('click', function() {
+        const newValue = !state.autoAdjust;
+        updateState({ autoAdjust: newValue });
+        if (newValue) {
+          autoFixToggle.classList.add('active');
+        } else {
+          autoFixToggle.classList.remove('active');
+        }
+        showMessage(newValue ? T.autoFixEnabled : T.autoFixDisabled);
+      });
+    }
+
+    // 导出相关配置
+    const EXPORT_FORMATS = [
+      { id: 'tailwind3', label: 'Tailwind 3', badge: 'free' },
+      { id: 'tailwind4', label: 'Tailwind 4', badge: 'free' },
+      { id: 'css', label: 'CSS' },
+      { id: 'scss', label: 'SCSS' },
+      { id: 'svg', label: 'SVG / Figma' },
+      { id: 'figma-tokens', label: 'Figma Tokens', badge: 'json' },
+      { id: 'figma-api', label: 'Figma Variables', badge: 'js' },
+      { id: 'json', label: 'Simple JSON' }
+    ];
+
+    const COLOR_FORMATS = [
+      { id: 'hex', label: 'Hex code', badge: 'free' },
+      { id: 'oklch', label: 'OKLCH' },
+      { id: 'hsl', label: 'HSL' },
+      { id: 'rgb', label: 'RGB' }
+    ];
+
+    // 导出状态
+    let exportState = {
+      isOpen: false,
+      format: 'tailwind3',
+      colorFormat: 'hex'
+    };
+
+    // 格式化颜色值
+    function formatColorValue(hex, format) {
+      if (typeof d3 === 'undefined') {
+        return hex;
+      }
+      const c = d3.color(hex);
+      if (!c) return hex;
+
+      switch (format) {
+        case 'rgb':
+          return c.formatRgb();
+        case 'hsl':
+          return d3.hsl(c).formatHsl();
+        case 'oklch':
+          // d3 可能不支持 oklch，使用 hex 作为后备
+          return c.formatHex();
+        case 'hex':
+        default:
+          return c.formatHex();
+      }
+    }
+
+    // 生成代码
+    function generateCode() {
+      if (state.palette.length === 0) {
+        return '// 请先生成调色板';
+      }
+
+      const val = function(hex) {
+        return formatColorValue(hex, exportState.colorFormat);
+      };
+
+      const format = exportState.format;
+      const palette = state.palette;
+      const config = state.tokenConfig;
+      const mode = state.selectedMode;
+
+      if (format === 'json') {
+        const colorsObj = {};
+        palette.forEach(function(p) {
+          colorsObj[p.step] = val(p.hex);
+        });
+        return JSON.stringify({
+          name: config.prefix,
+          system: mode.name,
+          colors: colorsObj
+        }, null, 2);
+      }
+
+      if (format === 'tailwind3') {
+        const entries = palette.map(function(p) {
+          return "        '" + config.prefix + '-' + p.step + "': '" + val(p.hex) + "',";
+        }).join('\n');
+        return '// tailwind.config.js\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n' + entries + '\n      }\n    }\n  }\n}';
+      }
+
+      if (format === 'tailwind4') {
+        const entries = palette.map(function(p) {
+          return '  --color-' + config.prefix + '-' + p.step + ': ' + val(p.hex) + ';';
+        }).join('\n');
+        return '@theme {\n' + entries + '\n}';
+      }
+
+      if (format === 'css') {
+        const entries = palette.map(function(p) {
+          return '  --' + config.prefix + '-' + p.step + ': ' + val(p.hex) + ';';
+        }).join('\n');
+        return ':root {\n  /* ' + mode.name + ' Scale - Base: ' + config.prefix + ' */\n' + entries + '\n}';
+      }
+
+      if (format === 'scss') {
+        const entries = palette.map(function(p) {
+          return '$' + config.prefix + '-' + p.step + ': ' + val(p.hex) + ';';
+        }).join('\n');
+        return '// ' + mode.name + ' Scale\n' + entries;
+      }
+
+      if (format === 'svg') {
+        const stepWidth = 100;
+        const height = 150;
+        const width = palette.length * stepWidth;
+        const rects = palette.map(function(p, i) {
+          return '    <g transform="translate(' + (i * stepWidth) + ', 0)">\n      <rect width="' + stepWidth + '" height="100" fill="' + p.hex + '" />\n      <text x="10" y="125" class="label">' + p.step + '</text>\n      <text x="10" y="142" class="hex">' + val(p.hex).toUpperCase() + '</text>\n    </g>';
+        }).join('\n');
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + width + ' ' + height + '" width="' + width + '" height="' + height + '">\n  <defs>\n    <style>\n      .label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; font-weight: 600; fill: #111827; }\n      .hex { font-family: "JetBrains Mono", monospace; font-size: 12px; fill: #6B7280; }\n      .bg { fill: #ffffff; }\n    </style>\n  </defs>\n  <rect width="' + width + '" height="' + height + '" class="bg" />\n  <g>\n' + rects + '\n  </g>\n</svg>';
+      }
+
+      if (format === 'figma-tokens') {
+        const tokens = {};
+        tokens[config.prefix] = {};
+        palette.forEach(function(p) {
+          tokens[config.prefix][p.step.toString()] = {
+            $value: p.hex,
+            $type: 'color'
+          };
+        });
+        return JSON.stringify(tokens, null, 2);
+      }
+
+      if (format === 'figma-api') {
+        const collectionName = config.prefix.charAt(0).toUpperCase() + config.prefix.slice(1) + ' Scale';
+        const vars = [];
+        palette.forEach(function(p) {
+          if (typeof d3 !== 'undefined') {
+            const c = d3.color(p.hex);
+            if (c) {
+              const rgb = c.rgb();
+              vars.push('    { name: "' + config.prefix + '/' + p.step + '", value: { r: ' + (rgb.r / 255).toFixed(4) + ', g: ' + (rgb.g / 255).toFixed(4) + ', b: ' + (rgb.b / 255).toFixed(4) + ' } }');
+            }
+          }
+        });
+        return '// Run this in Figma Console or Scripter Plugin\n(async () => {\n  const collection = figma.variables.createVariableCollection("' + collectionName + '");\n  const modeId = collection.modes[0].modeId;\n\n  const colors = [\n' + vars.join(',\n') + '\n  ];\n\n  for (const c of colors) {\n    const variable = figma.variables.createVariable(c.name, collection.id, "COLOR");\n    variable.setValueForMode(modeId, c.value);\n  }\n  \n  figma.notify("Created " + colors.length + " variables");\n})();';
+      }
+
+      return '';
+    }
+
+    // 渲染导出侧边栏
+    function renderExportSidebar() {
+      const sidebar = document.getElementById('exportSidebar');
+      if (!sidebar) return;
+
+      sidebar.innerHTML = EXPORT_FORMATS.map(function(item) {
+        const isActive = exportState.format === item.id;
+        return '<button class="export-sidebar-item' + (isActive ? ' active' : '') + '" data-format="' + item.id + '">' +
+          '<span>' + item.label + '</span>' +
+          (item.badge ? '<span class="export-sidebar-badge">' + item.badge + '</span>' : '') +
+          '</button>';
+      }).join('');
+
+      // 添加点击事件
+      sidebar.querySelectorAll('.export-sidebar-item').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          exportState.format = btn.dataset.format;
+          renderExportSidebar();
+          renderExportColorFormatBar();
+          updateExportCode();
+        });
+      });
+    }
+
+    // 渲染颜色格式栏
+    function renderExportColorFormatBar() {
+      const bar = document.getElementById('exportColorFormatBar');
+      if (!bar) return;
+
+      // 某些格式不需要颜色格式选择器
+      const hideFormats = ['svg', 'figma-tokens', 'figma-api', 'json'];
+      if (hideFormats.includes(exportState.format)) {
+        bar.style.display = 'none';
+        return;
+      }
+
+      bar.style.display = 'flex';
+      bar.innerHTML = COLOR_FORMATS.map(function(item) {
+        const isActive = exportState.colorFormat === item.id;
+        return '<button class="export-color-format-btn' + (isActive ? ' active' : '') + '" data-format="' + item.id + '">' +
+          '<span>' + item.label + '</span>' +
+          (item.badge ? '<span class="export-color-format-badge">' + item.badge + '</span>' : '') +
+          '</button>';
+      }).join('');
+
+      // 添加点击事件
+      bar.querySelectorAll('.export-color-format-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          exportState.colorFormat = btn.dataset.format;
+          renderExportColorFormatBar();
+          updateExportCode();
+        });
+      });
+    }
+
+    // 更新导出代码预览
+    function updateExportCode() {
+      const preview = document.getElementById('exportCodePreview');
+      if (preview) {
+        preview.textContent = generateCode();
+      }
+    }
+
+    // 打开导出模态框
+    function openExportModal() {
+      if (state.palette.length === 0) {
+        showMessage(T.pleaseGeneratePalette);
+        return;
+      }
+
+      exportState.isOpen = true;
+      const modal = document.getElementById('exportModal');
+      if (modal) {
+        modal.classList.add('show');
+      }
+
+      renderExportSidebar();
+      renderExportColorFormatBar();
+      updateExportCode();
+    }
+
+    // 关闭导出模态框
+    function closeExportModal() {
+      exportState.isOpen = false;
+      const modal = document.getElementById('exportModal');
+      if (modal) {
+        modal.classList.remove('show');
+      }
+    }
+
+    // 复制到剪贴板
+    function copyToClipboard() {
+      const code = generateCode();
+      if (!code) {
+        showMessage(T.noContentToCopy);
+        return;
+      }
+
+      const copyBtnText = document.getElementById('copyBtnText');
+
+      // 使用 Clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function() {
+          showMessage(T.copiedToClipboard);
+          if (copyBtnText) {
+            copyBtnText.textContent = T.copied;
+            setTimeout(function() {
+              copyBtnText.textContent = T.copyToClipboard;
+            }, 2000);
+          }
+        }).catch(function(err) {
+          console.error('复制失败:', err);
+          showMessage(T.copyFailed);
+        });
+      } else {
+        // 后备方案：使用传统方法
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showMessage(T.copiedToClipboard);
+          if (copyBtnText) {
+            copyBtnText.textContent = T.copied;
+            setTimeout(function() {
+              copyBtnText.textContent = T.copyToClipboard;
+            }, 2000);
+          }
+        } catch (err) {
+          console.error('复制失败:', err);
+          showMessage(T.copyFailed);
+        }
+        document.body.removeChild(textarea);
+      }
+    }
+
+    // 导出按钮
+    if (exportBtn) {
+      exportBtn.addEventListener('click', openExportModal);
+    }
+
+    // 导出模态框关闭按钮
+    const exportModalClose = document.getElementById('exportModalClose');
+    if (exportModalClose) {
+      exportModalClose.addEventListener('click', closeExportModal);
+    }
+
+    // 导出模态框背景点击关闭
+    const exportModalBackdrop = document.getElementById('exportModalBackdrop');
+    if (exportModalBackdrop) {
+      exportModalBackdrop.addEventListener('click', closeExportModal);
+    }
+
+    // 复制按钮
+    const exportCopyBtn = document.getElementById('exportCopyBtn');
+    if (exportCopyBtn) {
+      exportCopyBtn.addEventListener('click', copyToClipboard);
+    }
+
+    // 创建 Variables 按钮
+    const createVariablesBtn = document.getElementById('createVariablesBtn');
+    if (createVariablesBtn) {
+      createVariablesBtn.addEventListener('click', function() {
+        if (state.palette.length === 0) {
+          showMessage(T.pleaseGeneratePalette);
+          return;
+        }
+
+        // 发送消息到主线程
+        parent.postMessage({
+          pluginMessage: {
+            type: 'create-variables',
+            palette: state.palette,
+            prefix: state.tokenConfig.prefix || 'primary'
+          }
+        }, '*');
+      });
+    }
+
+    // 创建 Styles 按钮
+    const createStylesBtn = document.getElementById('createStylesBtn');
+    if (createStylesBtn) {
+      createStylesBtn.addEventListener('click', function() {
+        if (state.palette.length === 0) {
+          showMessage(T.pleaseGeneratePalette);
+          return;
+        }
+
+        // 发送消息到主线程
+        parent.postMessage({
+          pluginMessage: {
+            type: 'create-styles',
+            palette: state.palette,
+            prefix: state.tokenConfig.prefix || 'primary'
+          }
+        }, '*');
+      });
+    }
+
+      // 监听来自主线程的消息
+      window.onmessage = function(event) {
+        console.log('收到主线程消息:', event.data);
+        const msg = event.data.pluginMessage;
+
+        if (msg && msg.type === 'success') {
+          showMessage(msg.message || T.success);
+        }
+
+        if (msg && msg.type === 'variables-created') {
+          const count = msg.count || 0;
+          const skipped = msg.skipped || 0;
+          if (count > 0) {
+            showMessage(T.variablesCreated + ' ' + count + ' ' + T.variablesText + (skipped > 0 ? '，' + T.skipped + ' ' + skipped + ' ' + (currentLang === 'zh' ? '个' : '') : ''));
+          } else {
+            showMessage(T.allExist + '（' + skipped + ' ' + (currentLang === 'zh' ? '个' : '') + '）');
+          }
+        }
+
+        if (msg && msg.type === 'styles-created') {
+          const count = msg.count || 0;
+          const skipped = msg.skipped || 0;
+          if (count > 0) {
+            showMessage(T.stylesCreated + ' ' + count + ' ' + T.stylesText + (skipped > 0 ? '，' + T.skipped + ' ' + skipped + ' ' + (currentLang === 'zh' ? '个' : '') : ''));
+          } else {
+            showMessage(T.allExist + '（' + skipped + ' ' + (currentLang === 'zh' ? '个' : '') + '）');
+          }
+        }
+
+        if (msg && msg.type === 'error') {
+          showMessage(T.error + ' ' + (msg.message || T.unknownError));
+        }
+      };
+
+    // 初始化
+    function init() {
+      console.log('UI 初始化完成');
+
+      // 初始化语言（默认英文）
+      updateStaticLabels();
+
+      // 等待 d3 加载后生成初始调色板
+      waitForD3(function() {
+        const initialPalette = generatePalette(state.baseColor, state.selectedMode, state.autoAdjust);
+        state.palette = initialPalette;
+        updateStats();
+        renderPalette();
+        console.log('初始调色板已生成:', initialPalette);
+      });
+    }
+
+    // DOM 加载完成后初始化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "System Color Engine",
+  "description": "An engineering-grade color scale generator and accessibility checker inspired by Figma plugins. Generate, test, and export accessible color palettes.",
+  "requestFramePermissions": []
+}
